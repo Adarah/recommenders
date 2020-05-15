@@ -154,3 +154,4 @@ ml-20m/
 *.jpeg
 *.model
 *.mml
+.vim

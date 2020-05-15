@@ -1,5 +1,9 @@
+import logging
 import pysarplus_cpp
 import os
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger('sarplus')
 
 
 class SARModel:
@@ -17,6 +21,7 @@ class SARModel:
         def find_or_raise(extension):
             files = [f for f in all_files if f.endswith(extension)]
             if len(files) != 1:
+                log.info(f"files are {files}")
                 raise ValueError(
                     "Directory '%s' must contain exactly 1 file ending in '%s'"
                     % (path, extension)
