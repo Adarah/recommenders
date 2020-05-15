@@ -1,6 +1,7 @@
 import logging
 import pysarplus_cpp
 import os
+import gcsfs
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('sarplus')
@@ -16,7 +17,12 @@ class SARModel:
             return
 
         # find the .sar.related & .sar.offsets files
-        all_files = os.listdir(path)
+        if path.startswith("gs:"):
+            fs = gcsfs.GCSFileSystem(project='maga-bigdata')
+            all_files = fs.ls(path)
+
+        else:
+            all_files = os.listdir(path)
 
         def find_or_raise(extension):
             files = [f for f in all_files if f.endswith(extension)]
