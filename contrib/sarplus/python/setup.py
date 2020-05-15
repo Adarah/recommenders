@@ -16,7 +16,7 @@ class get_pybind_include(object):
 
 setup(
     name="pysarplus",
-    version="0.2.6",
+    version="0.2.61",
     description="SAR prediction for use with PySpark",
     url="https://github.com/Adarah/recommenders.git",
     author="Markus Cozowicz",

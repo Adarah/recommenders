@@ -67,6 +67,7 @@ class SARPlus:
 
         # threshold - items below this number get set to zero in coocurrence counts
 
+        log.info("Fitting now...")
         df.createOrReplaceTempView(self.f("{prefix}df_train_input"))
 
         if self.timedecay_formula:
@@ -259,7 +260,7 @@ class SARPlus:
 
         self.spark.sql(self.f("SELECT i1, i2, CAST(value AS DOUBLE) value FROM {prefix}item_similarity_mapped ORDER BY i1, i2"))\
             .coalesce(1)\
-            .write.format("com.microsoft.sarplus").mode("overwrite")\
+            .write.format("eisber.sarplus").mode("overwrite")\
             .save(cache_path_output)
 
         self.get_user_affinity(test).createOrReplaceTempView(self.f("{prefix}user_affinity"))
@@ -283,6 +284,7 @@ class SARPlus:
 
         # make sure only the header is pickled
         local_header = self.header
+        log.info("reached C++ call")
 
         # bridge to python/C++
         @pandas_udf(schema, PandasUDFType.GROUPED_MAP)
