@@ -20,8 +20,8 @@ class SARModel:
 
         def find_or_raise(extension):
             files = [f for f in all_files if f.endswith(extension)]
+            log.info(f"files are {files}")
             if len(files) != 1:
-                log.info(f"files are {files}")
                 raise ValueError(
                     "Directory '%s' must contain exactly 1 file ending in '%s'"
                     % (path, extension)
@@ -34,4 +34,3 @@ class SARModel:
 
     def predict(self, items, ratings, top_k, remove_seen):
         return self.model.predict(items, ratings, top_k, remove_seen)
-
