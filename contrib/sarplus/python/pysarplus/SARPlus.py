@@ -134,6 +134,8 @@ class SARPlus:
         item_cooccurrence.write.mode("overwrite").saveAsTable(
             self.f("{prefix}item_cooccurrence")
         )
+        logger.debug("item cooccurence")
+        item_cooccurrence.show()
 
         # compute the diagonal used later for Jaccard and Lift
         if self.similarity_type == SIM_LIFT or self.similarity_type == SIM_JACCARD:
@@ -198,6 +200,9 @@ class SARPlus:
             self.f("{prefix}item_similarity")
         )
 
+        logger.debug("item similarity")
+        self.fitem_similarity.show()
+
         # free space
         self.spark.sql(self.f("DROP TABLE {prefix}item_cooccurrence"))
         self.spark.sql(self.f("DROP TABLE {prefix}item_similarity_upper"))
@@ -257,6 +262,8 @@ class SARPlus:
         # export similarity matrix for C++ backed UDF
         logger.info("sarplus.recommend_k_items 2/3: prepare similarity matrix")
 
+        logger.info("writing to cache")
+
         self.spark.sql(self.f("SELECT i1, i2, CAST(value AS DOUBLE) value FROM {prefix}item_similarity_mapped ORDER BY i1, i2"))\
             .coalesce(1)\
             .write.format("eisber.sarplus").mode("overwrite")\
@@ -274,6 +281,9 @@ class SARPlus:
             )
             CLUSTER BY {col_user}
         """))
+
+        logger.debug("pred_input")
+        pred_input.show()
 
         schema = StructType([
             StructField("userID", pred_input.schema[self.header['col_user']].dataType, True), 
@@ -311,7 +321,10 @@ class SARPlus:
             .groupby(self.header['col_user'])\
             .apply(sar_predict_udf)
 
+        logger.debug("df_preds")
+
         df_preds.createOrReplaceTempView(self.f("{prefix}predictions"))
+        df_preds.show()
 
         return self.spark.sql(self.f("""
         SELECT userID {col_user}, b.i1 {col_item}, score
