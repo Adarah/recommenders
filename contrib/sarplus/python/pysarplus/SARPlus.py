@@ -2,7 +2,7 @@
 This is the one and only (to rule them all) implementation of SAR.
 """
 
-import logging
+from loguru import logger
 import pyspark.sql.functions as F
 import pandas as pd
 from pyspark.sql.types import StringType, DoubleType, StructType, StructField, IntegerType, FloatType
@@ -13,8 +13,7 @@ SIM_COOCCUR = "cooccurrence"
 SIM_JACCARD = "jaccard"
 SIM_LIFT = "lift"
 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger('sarplus')
+logger.add("sar.log")
 
 class SARPlus:
     """SAR implementation for PySpark"""
@@ -67,7 +66,7 @@ class SARPlus:
 
         # threshold - items below this number get set to zero in coocurrence counts
 
-        log.info("Fitting now...")
+        logger.info("Fitting now...")
         df.createOrReplaceTempView(self.f("{prefix}df_train_input"))
 
         if self.timedecay_formula:
@@ -118,7 +117,7 @@ class SARPlus:
 
         df.createOrReplaceTempView(self.f("{prefix}df_train"))
 
-        log.info("sarplus.fit 1/2: compute item cooccurences...")
+        logger.info("sarplus.fit 1/2: compute item cooccurences...")
 
         # compute cooccurrence above minimum threshold
         query = self.f(
@@ -174,7 +173,7 @@ class SARPlus:
 
 
         # store upper triangular
-        log.info("sarplus.fit 2/2: compute similiarity metric %s..." % self.similarity_type)
+        logger.info("sarplus.fit 2/2: compute similiarity metric %s..." % self.similarity_type)
         self.item_similarity.write.mode("overwrite").saveAsTable(
             self.f("{prefix}item_similarity_upper")
         )
@@ -237,7 +236,7 @@ class SARPlus:
     def recommend_k_items(self, test, cache_path, top_k=10, remove_seen=True, n_user_prediction_partitions=200):
 
         # create item id to continuous index mapping
-        log.info("sarplus.recommend_k_items 1/3: create item index")
+        logger.info("sarplus.recommend_k_items 1/3: create item index")
         self.spark.sql(self.f("SELECT i1, row_number() OVER(ORDER BY i1)-1 idx FROM (SELECT DISTINCT i1 FROM {prefix}item_similarity) CLUSTER BY i1"))\
             .write.mode("overwrite").saveAsTable(self.f("{prefix}item_mapping"))
 
@@ -256,7 +255,7 @@ class SARPlus:
             cache_path_input = cache_path
 
         # export similarity matrix for C++ backed UDF
-        log.info("sarplus.recommend_k_items 2/3: prepare similarity matrix")
+        logger.info("sarplus.recommend_k_items 2/3: prepare similarity matrix")
 
         self.spark.sql(self.f("SELECT i1, i2, CAST(value AS DOUBLE) value FROM {prefix}item_similarity_mapped ORDER BY i1, i2"))\
             .coalesce(1)\
@@ -284,7 +283,7 @@ class SARPlus:
 
         # make sure only the header is pickled
         local_header = self.header
-        log.info("reached C++ call")
+        logger.info("reached C++ call")
 
         # bridge to python/C++
         @pandas_udf(schema, PandasUDFType.GROUPED_MAP)
@@ -305,7 +304,7 @@ class SARPlus:
 
             return preds_ret
         
-        log.info("sarplus.recommend_k_items 3/3: compute recommendations")
+        logger.info("sarplus.recommend_k_items 3/3: compute recommendations")
 
         df_preds = pred_input\
             .repartition(n_user_prediction_partitions, self.header['col_user'])\
