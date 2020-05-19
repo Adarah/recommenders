@@ -201,7 +201,7 @@ class SARPlus:
         )
 
         logger.debug("item similarity")
-        self.fitem_similarity.show()
+        self.item_similarity.show()
 
         # free space
         self.spark.sql(self.f("DROP TABLE {prefix}item_cooccurrence"))
