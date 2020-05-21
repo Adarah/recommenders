@@ -131,7 +131,7 @@ class SARPlus:
         """)
 
         item_cooccurrence = self.spark.sql(query)
-        item_cooccurrence.createOrReplaceTempView(self.f("{prefix}item_cooccurence"))
+        item_cooccurrence.createOrReplaceTempView(self.f("{prefix}item_cooccurrence"))
         # item_cooccurrence.write.mode("overwrite").saveAsTable(
         #     self.f("{prefix}item_cooccurrence")
         # )
