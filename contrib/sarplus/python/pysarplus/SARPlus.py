@@ -131,10 +131,10 @@ class SARPlus:
         """)
 
         item_cooccurrence = self.spark.sql(query)
-        item_cooccurrence.createOrReplaceTempView(self.f("{prefix}item_cooccurrence"))
-        # item_cooccurrence.write.mode("overwrite").saveAsTable(
-        #     self.f("{prefix}item_cooccurrence")
-        # )
+        # item_cooccurrence.createOrReplaceTempView(self.f("{prefix}item_cooccurrence"))
+        item_cooccurrence.write.mode("overwrite").saveAsTable(
+            self.f("{prefix}item_cooccurrence")
+        )
         logger.debug("item cooccurence")
         # item_cooccurrence.show()
 
@@ -181,11 +181,11 @@ class SARPlus:
         logger.info("sarplus.fit 2/2: compute similiarity metric %s..." % self.similarity_type)
 
         logger.debug("item similarity upper")
-        # self.item_similarity.show()
-        # self.item_similarity.write.mode("overwrite").saveAsTable(
-        #     self.f("{prefix}item_similarity_upper")
-        # )
-        self.item_similarity.createOrReplaceTempView(self.f("{prefix}item_similarity_upper"))
+        self.item_similarity.show()
+        self.item_similarity.write.mode("overwrite").saveAsTable(
+            self.f("{prefix}item_similarity_upper")
+        )
+        # self.item_similarity.createOrReplaceTempView(self.f("{prefix}item_similarity_upper"))
 
         # expand upper triangular to full matrix
 
@@ -203,19 +203,19 @@ class SARPlus:
         )
 
         self.item_similarity = self.spark.sql(query)
-        # self.item_similarity.write.mode("overwrite").saveAsTable(
-        #     self.f("{prefix}item_similarity")
-        # )
+        self.item_similarity.write.mode("overwrite").saveAsTable(
+            self.f("{prefix}item_similarity")
+        )
 
-        self.item_similarity.createOrReplaceTempView(self.f("{prefix}item_similarity_upper"))
+        # self.item_similarity.createOrReplaceTempView(self.f("{prefix}item_similarity_upper"))
 
         logger.debug("item similarity")
         # self.item_similarity.show()
 
         # free space
-        # self.spark.sql(self.f("DROP TABLE {prefix}item_cooccurrence"))
-        # self.spark.sql(self.f("DROP TABLE {prefix}item_similarity_upper"))
-        self.spark.catalog.dropTempView(self.f("{prefix}item_cooccurrence"))
+        self.spark.sql(self.f("DROP TABLE {prefix}item_cooccurrence"))
+        self.spark.sql(self.f("DROP TABLE {prefix}item_similarity_upper"))
+        # self.spark.catalog.dropTempView(self.f("{prefix}item_cooccurrence"))
         self.spark.catalog.dropTempView(self.f("{prefix}item_similarity_upper"))
 
         self.item_similarity = self.spark.table(self.f("{prefix}item_similarity"))
@@ -234,10 +234,10 @@ class SARPlus:
         )
 
         df_test_users = self.spark.sql(query)
-        # df_test_users.write.mode("overwrite").saveAsTable(
-        #     self.f("{prefix}df_test_users")
-        # )
-        df_test_users.createOrReplaceTempView(self.f("{prefix}df_test_users"))
+        df_test_users.write.mode("overwrite").saveAsTable(
+            self.f("{prefix}df_test_users")
+        )
+        # df_test_users.createOrReplaceTempView(self.f("{prefix}df_test_users"))
 
         query = self.f(
         """
@@ -255,8 +255,8 @@ class SARPlus:
         # create item id to continuous index mapping
         logger.info("sarplus.recommend_k_items 1/3: create item index")
         self.spark.sql(self.f("SELECT i1, row_number() OVER(ORDER BY i1)-1 idx FROM (SELECT DISTINCT i1 FROM {prefix}item_similarity) CLUSTER BY i1"))\
-            .createOrReplaceTempView(self.f("{prefix}item_mapping"))
-            # .write.mode("overwrite").saveAsTable(self.f("{prefix}item_mapping"))
+            .write.mode("overwrite").saveAsTable(self.f("{prefix}item_mapping"))
+            # .createOrReplaceTempView(self.f("{prefix}item_mapping"))
 
         # map similarity matrix into index space
         self.spark.sql(self.f("""
@@ -264,8 +264,8 @@ class SARPlus:
             FROM {prefix}item_similarity is, {prefix}item_mapping a, {prefix}item_mapping b
             WHERE is.i1 = a.i1 AND i2 = b.i1
         """))\
-        .createOrReplaceTempView(self.f("{prefix}item_similarity_mapped"))
-        # .write.mode("overwrite").saveAsTable(self.f("{prefix}item_similarity_mapped"))
+        .write.mode("overwrite").saveAsTable(self.f("{prefix}item_similarity_mapped"))
+        # .createOrReplaceTempView(self.f("{prefix}item_similarity_mapped"))
 
         cache_path_output = cache_path
         if cache_path.startswith('dbfs:'):
@@ -361,8 +361,8 @@ class SARPlus:
 
         self.get_user_affinity(test)\
             .write.mode("overwrite")\
-            .createOrReplaceTempView(self.f("{prefix}user_affinity"))
-            # .saveAsTable(self.f("{prefix}user_affinity"))
+            .saveAsTable(self.f("{prefix}user_affinity"))
+            # .createOrReplaceTempView(self.f("{prefix}user_affinity"))
 
         # user_affinity * item_similarity
         # filter top-k
