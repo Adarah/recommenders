@@ -13,7 +13,7 @@ SIM_COOCCUR = "cooccurrence"
 SIM_JACCARD = "jaccard"
 SIM_LIFT = "lift"
 
-logger.add("sar.log")
+# logger.add("sar.log")
 
 class SARPlus:
     """SAR implementation for PySpark"""
