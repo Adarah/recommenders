@@ -181,7 +181,7 @@ class SARPlus:
         logger.info("sarplus.fit 2/2: compute similiarity metric %s..." % self.similarity_type)
 
         logger.debug("item similarity upper")
-        self.item_similarity.show()
+        # self.item_similarity.show()
         self.item_similarity.write.mode("overwrite").saveAsTable(
             self.f("{prefix}item_similarity_upper")
         )
@@ -216,7 +216,7 @@ class SARPlus:
         self.spark.sql(self.f("DROP TABLE {prefix}item_cooccurrence"))
         self.spark.sql(self.f("DROP TABLE {prefix}item_similarity_upper"))
         # self.spark.catalog.dropTempView(self.f("{prefix}item_cooccurrence"))
-        self.spark.catalog.dropTempView(self.f("{prefix}item_similarity_upper"))
+        # self.spark.catalog.dropTempView(self.f("{prefix}item_similarity_upper"))
 
         self.item_similarity = self.spark.table(self.f("{prefix}item_similarity"))
 
